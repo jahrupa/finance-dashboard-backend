@@ -1,0 +1,19 @@
+# Binaries
+ap-backend
+*.exe
+*.out
+
+# Environment — never commit secrets
+.env
+
+# Go module cache
+vendor/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+# Environment files for different stages
+.env
+.env.uat
+.env.prod

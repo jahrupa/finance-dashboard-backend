@@ -1,0 +1,11 @@
+.git
+.gitignore
+.air.toml
+tmp/
+ap-backend
+*.md
+.env
+.env.*
+docker-compose*.yml
+Makefile
+uploads/
