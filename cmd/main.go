@@ -24,6 +24,11 @@ func main() {
 	defer database.Disconnect()
 	log.Printf("✅ Connected to MongoDB: %s", cfg.DBName)
 
+	// Seed a default admin user so the system is usable on a fresh database.
+	if err := database.SeedDefaultAdmin(db, cfg.AdminName, cfg.AdminEmail, cfg.AdminPassword); err != nil {
+		log.Printf("Warning: could not seed default admin: %v", err)
+	}
+
 	app := fiber.New(fiber.Config{
 		AppName:      "AP Dashboard API v2.0",
 		ErrorHandler: middleware.ErrorHandler,

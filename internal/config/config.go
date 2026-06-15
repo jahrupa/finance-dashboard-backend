@@ -20,6 +20,11 @@ type Config struct {
 	AllowCredentials bool
 	DevJWTBypass     bool
 	Environment      string
+
+	// Default admin — seeded on startup if it does not already exist
+	AdminName     string
+	AdminEmail    string
+	AdminPassword string
 }
 
 func Load() *Config {
@@ -48,6 +53,10 @@ func Load() *Config {
 		// 29-may-2026 coomented this line because saare user ko same data show ho raha tha
 		// DevJWTBypass:     devBypass,
 		Environment: getEnv("ENV", "development"),
+
+		AdminName:     getEnv("ADMIN_NAME", "Administrator"),
+		AdminEmail:    getEnv("ADMIN_EMAIL", "admin@karmamgmt.com"),
+		AdminPassword: getEnv("ADMIN_PASSWORD", "Admin@123"),
 	}
 
 	validateCriticalEnv(cfg)
