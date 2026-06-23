@@ -153,6 +153,7 @@ func (h *InvoiceHandler) Create(c *fiber.Ctx) error {
 	now := time.Now()
 	inv := models.Invoice{
 		ID: primitive.NewObjectID(), InvoiceNo: req.InvoiceNo, Vendor: req.Vendor,
+		VendorEmail: req.VendorEmail,
 		InvoiceDate: req.InvoiceDate, DateOfReceipt: now, Department: req.Department,
 		UploadedBy: req.UploadedBy, Amount: req.Amount, DueDate: req.DueDate,
 		TaxDetails: req.TaxDetails, Remarks: req.Remarks, DocumentURL: req.DocumentURL,
