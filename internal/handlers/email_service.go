@@ -99,10 +99,12 @@ func SendPaymentProcessedEmail(d PaymentEmailData) error {
 		return fmt.Errorf("STARTTLS failed: %w", err)
 	}
 
-	// Authenticate
-	auth := smtp.PlainAuth("", smtpUser, smtpPass, smtpHost)
+	// Authenticate.
+	// Office 365 rejects AUTH PLAIN ("504 5.7.4 Unrecognized authentication
+	// type") and only accepts AUTH LOGIN (or XOAUTH2), so we use LOGIN here.
+	auth := loginAuth(smtpUser, smtpPass, smtpHost)
 	if err := client.Auth(auth); err != nil {
-		return fmt.Errorf("SMTP auth failed (check SMTP_USER / SMTP_PASS): %w", err)
+		return fmt.Errorf("SMTP auth failed (check SMTP_USER / SMTP_PASS, and that SMTP AUTH is enabled for the mailbox): %w", err)
 	}
 
 	// Envelope
@@ -126,6 +128,55 @@ func SendPaymentProcessedEmail(d PaymentEmailData) error {
 	}
 
 	return client.Quit()
+}
+
+// loginAuthClient implements smtp.Auth for the AUTH LOGIN mechanism.
+//
+// Go's standard library only ships smtp.PlainAuth (AUTH PLAIN). Office 365
+// does not support AUTH PLAIN — it replies "504 5.7.4 Unrecognized
+// authentication type" — and only accepts AUTH LOGIN (or XOAUTH2), so we
+// provide a minimal LOGIN implementation here.
+type loginAuthClient struct {
+	username, password, host string
+}
+
+func loginAuth(username, password, host string) smtp.Auth {
+	return &loginAuthClient{username, password, host}
+}
+
+func (a *loginAuthClient) Start(server *smtp.ServerInfo) (string, []byte, error) {
+	// Only send credentials over an encrypted connection or to the same host
+	// we intended to authenticate against. After STARTTLS, server.TLS is true.
+	if !server.TLS {
+		advertised := false
+		for _, mechanism := range server.Auth {
+			if mechanism == "LOGIN" {
+				advertised = true
+				break
+			}
+		}
+		if !advertised {
+			return "", nil, fmt.Errorf("unencrypted connection to %q", a.host)
+		}
+	}
+	if server.Name != a.host {
+		return "", nil, fmt.Errorf("wrong host name %q (expected %q)", server.Name, a.host)
+	}
+	return "LOGIN", nil, nil
+}
+
+func (a *loginAuthClient) Next(fromServer []byte, more bool) ([]byte, error) {
+	if !more {
+		return nil, nil
+	}
+	switch strings.ToLower(strings.TrimSpace(string(fromServer))) {
+	case "username:":
+		return []byte(a.username), nil
+	case "password:":
+		return []byte(a.password), nil
+	default:
+		return nil, fmt.Errorf("unexpected SMTP LOGIN server challenge: %q", fromServer)
+	}
 }
 
 func buildPaymentEmailBody(d PaymentEmailData) string {
