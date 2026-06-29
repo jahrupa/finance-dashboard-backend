@@ -44,7 +44,7 @@ func Load() *Config {
 		MongoURI:       getEnv("MONGO_URI", ""),
 		DBName:         getEnv("DB_NAME", "ap-dashboard"),
 		JWTSecret:      getEnv("JWT_SECRET", ""),
-		AllowedOrigins: getEnv("ALLOWED_ORIGINS", "http://localhost:5173"),
+		AllowedOrigins: getEnv("ALLOWED_ORIGINS", ""),
 		// AllowedOrigins:   getEnv("ALLOWED_ORIGINS", ""),
 		AllowMethods:     getEnv("ALLOW_METHODS", "GET,POST,PUT,PATCH,DELETE,OPTIONS"),
 		AllowHeaders:     getEnv("ALLOW_HEADERS", "Origin,Content-Type,Accept,Authorization"),
